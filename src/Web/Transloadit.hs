@@ -22,7 +22,6 @@ import qualified Data.Text.Lazy          as TL
 import           Data.Text.Lazy.Builder  (fromText, toLazyText)
 import           Data.Text.Lazy.Encoding
 import           Data.Time
-import           Debug.Trace
 import           System.Locale
 import           Text.Julius
 import           Yesod                   hiding (Key)
@@ -58,7 +57,7 @@ data TransloaditResults = TransloaditResults {
 
 instance FromJSON TransloaditResults where
   parseJSON (Object o) = TransloaditResults <$> (o .: "uploads")
-  parseJSON x = traceShow x mzero
+  parseJSON _ = mzero
 
 formatExpiryTime :: UTCTime -> Text
 formatExpiryTime = pack . formatTime defaultTimeLocale "%Y/%m/%d %H:%M:%S+00:00"
