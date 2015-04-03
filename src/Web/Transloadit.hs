@@ -16,6 +16,7 @@ import           Data.Aeson.Types
 import           Data.Byteable
 import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Lazy    as BSL
+import           Data.Maybe
 import           Data.Monoid
 import           Data.Text
 import qualified Data.Text.Lazy          as TL
@@ -45,7 +46,7 @@ data TransloaditParams = TransloaditParams {
   formIdent           :: Text
 } deriving (Show)
 
-data TransloaditResponse = TransloaditResponse { raw :: Text } deriving (Show)
+data TransloaditResponse = TransloaditResponse { raw :: Text, token :: Text } deriving (Show)
 
 data Upload = Upload Text deriving (Show)
 instance FromJSON Upload where
@@ -99,10 +100,20 @@ transloadIt t@(TransloaditParams {..}) (Secret s) = do
   |]
   return signature
 
+tokenText = do
+  csrfToken <- fmap reqToken getRequest
+  return $ fromMaybe mempty csrfToken
+
 handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
+                                          <*> ireq hiddenField "_token"
+
   let r = ((decode . encodeUtf8 . TL.fromStrict) (raw d)) :: Maybe TransloaditResults
-  return $ fmap results r
+  t <- tokenText
+
+  return $ case (token d == t) of
+    True -> fmap results r
+    _ -> Nothing
 
 {- Example web service demonstrating usage of the transloadIt widget -}
 
@@ -132,11 +143,15 @@ getHomeR = defaultLayout $ do
   -- Load the widget, and retrieve the given signature
   sig <- transloadIt params (Secret "my_secret")
 
+  -- CSRF considerations
+  t <- tokenText
+
   -- Create a form
   [whamlet|
     <form id="#{ident}" action=@{HomeR} method="POST">
+      <input type="hidden" name="_token" value="#{t}">
       <input type="hidden" name="signature" value="#{sig}">
-      <input name="my_file" type="file">
+      <input type="file" name="my_file">
       <input type="submit" value="Upload">
   |]
   return ()
