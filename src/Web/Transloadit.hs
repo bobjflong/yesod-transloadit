@@ -115,6 +115,7 @@ handleTransloadit = do
     True -> return $ raw d
     _ -> Nothing
 
+extractFirstResult :: AsValue s => Text -> Maybe s -> Maybe Value
 extractFirstResult _ Nothing = Nothing
 extractFirstResult k (Just uploads) = uploads ^? AL.key "results" . AL.key k . nth 0 . AL.key "ssl_url"
 
