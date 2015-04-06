@@ -4,6 +4,8 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 module Web.Transloadit where
 
@@ -12,10 +14,13 @@ import           Control.Monad
 import           Crypto.Hash
 import           Data.Aeson
 import           Data.Aeson.Encode       (encodeToTextBuilder)
+import           Data.Aeson.Lens hiding (key)
+import           qualified Data.Aeson.Lens as AL
 import           Data.Aeson.Types
 import           Data.Byteable
 import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Lazy    as BSL
+import           Control.Lens.Operators hiding ((.=))
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text
@@ -43,7 +48,8 @@ data TransloaditParams = TransloaditParams {
   authExpires         :: UTCTime,
   transloaditKey      :: Key,
   transloaditTemplate :: Template,
-  formIdent           :: Text
+  formIdent           :: Text,
+  transloaditSecret   :: Secret
 } deriving (Show)
 
 data TransloaditResponse = TransloaditResponse { raw :: Text, token :: Text } deriving (Show)
@@ -52,19 +58,11 @@ data Upload = Upload Text deriving (Show)
 instance FromJSON Upload where
   parseJSON (Object o) = Upload <$> (o .: "ssl_url")
 
-data TransloaditResults = TransloaditResults {
-  results :: [Upload]
-} deriving (Show)
-
-instance FromJSON TransloaditResults where
-  parseJSON (Object o) = TransloaditResults <$> (o .: "uploads")
-  parseJSON _ = mzero
-
 formatExpiryTime :: UTCTime -> Text
 formatExpiryTime = pack . formatTime defaultTimeLocale "%Y/%m/%d %H:%M:%S+00:00"
 
 instance ToJSON TransloaditParams where
-  toJSON (TransloaditParams a (Key k) (Template t) _) = object [
+  toJSON (TransloaditParams a (Key k) (Template t) _ _) = object [
       "auth" .= object [
         "key" .= k,
         "expires" .= (formatExpiryTime a)
@@ -78,16 +76,17 @@ encodeText = toLazyText . encodeToTextBuilder . toJSON
 
 type Signature = String
 
-sign :: TransloaditParams -> BS.ByteString -> Signature
-sign cfg s = (show . hmacGetDigest) h
+sign :: TransloaditParams -> Signature
+sign cfg = (show . hmacGetDigest) h
   where h :: HMAC SHA1
-        h = hmac s ((BSL.toStrict . encode) cfg)
+        h = hmac (s cfg) ((BSL.toStrict . encode) cfg)
+        s (transloaditSecret -> Secret s') = s'
 
-transloadIt :: (YesodJquery m, YesodTransloadit m) => TransloaditParams -> Secret -> WidgetT m IO Signature
-transloadIt t@(TransloaditParams {..}) (Secret s) = do
+transloadIt :: (YesodJquery m, YesodTransloadit m) => TransloaditParams -> WidgetT m IO Signature
+transloadIt t@(TransloaditParams {..}) = do
   master <- getYesod
   let root = transloaditRoot master
-      signature = sign t s
+      signature = sign t
   addScriptEither $ urlJqueryJs master
   addScriptRemote $ root <> "jquery.transloadit2-v2-latest.js"
   toWidget [julius|
@@ -100,22 +99,27 @@ transloadIt t@(TransloaditParams {..}) (Secret s) = do
   |]
   return signature
 
+tokenText :: (YesodJquery m, YesodTransloadit m) => WidgetT m IO Text
 tokenText = do
   csrfToken <- fmap reqToken getRequest
   return $ fromMaybe mempty csrfToken
 
+handleTransloadit :: (RenderMessage m FormMessage, YesodJquery m, YesodTransloadit m) => WidgetT m IO (Maybe Text)
 handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
                                           <*> ireq hiddenField "_token"
 
-  let r = ((decode . encodeUtf8 . TL.fromStrict) (raw d)) :: Maybe TransloaditResults
   t <- tokenText
 
   return $ case (token d == t) of
-    True -> fmap results r
+    True -> return $ raw d
     _ -> Nothing
 
-{- Example web service demonstrating usage of the transloadIt widget -}
+extractFirstResult _ Nothing = Nothing
+extractFirstResult k (Just uploads) = uploads ^? AL.key "results" . AL.key k . nth 0 . AL.key "ssl_url"
+
+{-
+-- Example web service demonstrating usage of the transloadIt widget
 
 data Test = Test
 mkYesod "Test" [parseRoutes| / HomeR GET POST |]
@@ -137,11 +141,12 @@ getHomeR = defaultLayout $ do
   -- Create some Transloadit params, you need: Expiry time; Api key; Template Id; Form id
   let expiry = addUTCTime 3600 now
       key = Key "my_key"
-      template = Template "a0db71d0d8af11e4b498edf9af585324"
-      params = TransloaditParams expiry key template ident
+      template = Template "my_template"
+      secret = Secret "my_secret"
+      params = TransloaditParams expiry key template ident secret
 
   -- Load the widget, and retrieve the given signature
-  sig <- transloadIt params (Secret "my_secret")
+  sig <- transloadIt params
 
   -- CSRF considerations
   t <- tokenText
@@ -159,13 +164,13 @@ getHomeR = defaultLayout $ do
 postHomeR :: Handler Html
 postHomeR = defaultLayout $ do
   results <- handleTransloadit
-  [whamlet|
-    $maybe uploads <- results
-      $forall (Upload url) <- uploads
-        <img src="#{url}"/>
-    $nothing
-      No results
-  |]
+
+  -- my_template contains a step called "cropped_thumb"
+  case extractFirstResult "cropped_thumb" results of
+    Just (String url) -> [whamlet| <img src="#{url}"/> |]
+    _ -> [whamlet| No results :( |]
+
   return ()
 
-exampleServer = warp 3000 Test
+exampleServer = warp 4567 Test
+-}
