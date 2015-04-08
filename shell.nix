@@ -1,8 +1,8 @@
 with (import <nixpkgs> {}).pkgs;
 let pkg = haskellngPackages.callPackage
             ({ mkDerivation, aeson, base, byteable, bytestring, cryptohash
-             , lens, lens-aeson, old-locale, shakespeare, stdenv, text, time
-             , transformers, yesod, yesod-core, yesod-form
+             , hspec, lens, lens-aeson, old-locale, shakespeare, stdenv, text
+             , time, transformers, yesod, yesod-core, yesod-form, yesod-test
              }:
              mkDerivation {
                pname = "transloadit-yesod";
@@ -12,6 +12,9 @@ let pkg = haskellngPackages.callPackage
                  aeson base byteable bytestring cryptohash lens lens-aeson
                  old-locale shakespeare text time transformers yesod yesod-core
                  yesod-form
+               ];
+               testDepends = [
+                 base hspec old-locale time yesod yesod-form yesod-test
                ];
                license = stdenv.lib.licenses.mit;
              }) {};

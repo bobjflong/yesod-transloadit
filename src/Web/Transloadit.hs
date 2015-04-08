@@ -132,6 +132,7 @@ instance YesodTransloadit Test
 instance RenderMessage Test FormMessage where
   renderMessage _ _ = defaultFormMessage
 
+
 getHomeR :: Handler Html
 getHomeR = defaultLayout $ do
   now <- liftIO getCurrentTime

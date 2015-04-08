@@ -34,3 +34,20 @@ library
 
   hs-source-dirs:      src
   default-language:    Haskell2010
+
+test-suite tests
+  ghc-options:         -Wall
+  type:                exitcode-stdio-1.0
+  main-is:             Tests.hs
+  hs-source-dirs:      test
+
+  build-depends:       base,
+                       transloadit-yesod,
+                       yesod-test,
+                       hspec,
+                       yesod,
+                       yesod-form,
+                       time,
+                       old-locale
+
+  default-language:    Haskell2010
