@@ -14,7 +14,7 @@ let pkg = haskellngPackages.callPackage
                  yesod-form
                ];
                testDepends = [
-                 base hspec old-locale time yesod yesod-form yesod-test
+                 base hspec old-locale text time yesod yesod-form yesod-test
                ];
                license = stdenv.lib.licenses.mit;
              }) {};

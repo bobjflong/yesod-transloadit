@@ -6,6 +6,7 @@
 
 module Main where
 
+import           Data.Text
 import           Data.Time
 import           System.Locale
 import           Test.Hspec
@@ -55,7 +56,7 @@ getHomeR = defaultLayout $ do
   return ()
 
 formGenSpecs :: Spec
-formGenSpecs = yesodSpec Test $
+formGenSpecs = yesodSpec Test $ do
   ydescribe "Form generation" $ do
     yit "adds correct Transloadit params" $ do
       get HomeR
@@ -69,5 +70,9 @@ formGenSpecs = yesodSpec Test $
     yit "adds Transloadit" $ do
       get HomeR
       bodyContains "<script src=\"https://assets.transloadit.com/js/jquery.transloadit2-v2-latest.js\"></script>"
+  ydescribe "Response parsing" $ do
+    yit "works" $ do
+      let sample = Just "{\"results\":{\"foo\":[{\"ssl_url\":\"bar\"}]}}" :: Maybe Text
+      assertEqual "Basic example" (extractFirstResult "foo" sample) (Just (String "bar"))
 
 main = hspec formGenSpecs
