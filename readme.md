@@ -41,10 +41,10 @@ getHomeR = defaultLayout $ do
       key = Key "my_key"
       template = Template "my_template"
       secret = Secret "my_secret"
-      params = TransloaditParams expiry key template ident secret
+      params = mkParams expiry key template ident secret
 
   -- Load the widget, and retrieve the given signature
-  sig <- transloadIt params
+  sig <- either (const $ error "nooo") transloadIt params
 
   -- CSRF considerations, tokenText is a helper that tries to extract the current CSRF token
   t <- tokenText
