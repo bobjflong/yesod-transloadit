@@ -7,7 +7,18 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE ViewPatterns          #-}
 
-module Web.Transloadit where
+module Web.Transloadit (
+    Key(..),
+    Template(..),
+    Secret(..),
+    TransloaditParams,
+    mkParams,
+    tokenText,
+    handleTransloadit,
+    YesodTransloadit,
+    transloadIt,
+    extractFirstResult
+  ) where
 
 import           Control.Applicative
 import           Control.Monad
@@ -51,6 +62,13 @@ data TransloaditParams = TransloaditParams {
   formIdent           :: Text,
   transloaditSecret   :: Secret
 } deriving (Show)
+
+data ParamsError = UnknownError
+type ParamsResult = Either ParamsError TransloaditParams
+
+-- Give us the ability for greater validation rules in future
+mkParams :: UTCTime -> Key -> Template -> Text -> Secret -> ParamsResult
+mkParams u k t f s = return (TransloaditParams u k t f s)
 
 data TransloaditResponse = TransloaditResponse { raw :: Text, token :: Text } deriving (Show)
 
