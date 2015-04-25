@@ -1,59 +1,59 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE ViewPatterns          #-}
 
 module Web.Transloadit (
+    YesodTransloadit(..),
+    mkParams,
+    transloadIt,
+    handleTransloadit,
+    tokenText,
+    extractFirstResult,
+    ParamsResult,
+    ParamsError(..),
     Key(..),
     Template(..),
     Secret(..),
-    TransloaditParams,
-    mkParams,
-    tokenText,
-    handleTransloadit,
-    YesodTransloadit,
-    transloadIt,
-    extractFirstResult
+    TransloaditParams
   ) where
 
 import           Control.Applicative
-import           Control.Monad
+import           Control.Lens.Operators hiding ((.=))
+import           Control.Monad          (mzero)
 import           Crypto.Hash
 import           Data.Aeson
-import           Data.Aeson.Encode       (encodeToTextBuilder)
-import           Data.Aeson.Lens hiding (key)
-import           qualified Data.Aeson.Lens as AL
-import           Data.Aeson.Types
-import           Data.Byteable
-import qualified Data.ByteString         as BS
-import qualified Data.ByteString.Lazy    as BSL
-import           Control.Lens.Operators hiding ((.=))
+import           Data.Aeson.Encode      (encodeToTextBuilder)
+import           Data.Aeson.Lens        hiding (key)
+import qualified Data.Aeson.Lens        as AL
+import qualified Data.ByteString        as BS
+import qualified Data.ByteString.Lazy   as BSL
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text
-import qualified Data.Text.Lazy          as TL
-import           Data.Text.Lazy.Builder  (fromText, toLazyText)
-import           Data.Text.Lazy.Encoding
+import qualified Data.Text.Lazy         as TL
+import           Data.Text.Lazy.Builder (toLazyText)
 import           Data.Time
 import           System.Locale
 import           Text.Julius
-import           Yesod                   hiding (Key)
-import           Yesod.Core
-import           Yesod.Form.Jquery       (YesodJquery (..))
+import           Yesod                  hiding (Key)
+import           Yesod.Form.Jquery      (YesodJquery (..))
 
+-- | Typeclass for your website to enable using Transloadit.
 class YesodTransloadit master where
+  -- | Override the 'transloaditRoot' to point at a different base Javascript directory.
+  -- The default settings will load assets from assets.transloadit.com.
   transloaditRoot :: master -> Text
   transloaditRoot _ = "https://assets.transloadit.com/js/"
+  {-# MINIMAL #-}
 
 newtype Secret = Secret { secret :: BS.ByteString } deriving (Eq, Show)
 newtype Key = Key { key :: Text } deriving (Eq, Show)
 newtype Template = Template { template :: Text } deriving (Eq, Show)
-
-type FormIdent = Text
 
 data TransloaditParams = TransloaditParams {
   authExpires         :: UTCTime,
@@ -66,8 +66,13 @@ data TransloaditParams = TransloaditParams {
 data ParamsError = UnknownError
 type ParamsResult = Either ParamsError TransloaditParams
 
--- Give us the ability for greater validation rules in future
-mkParams :: UTCTime -> Key -> Template -> Text -> Secret -> ParamsResult
+-- | Smart constructor for Transloadit params
+mkParams :: UTCTime      -- ^ When the Transloadit signature should expire
+         -> Key          -- ^ Transloadit key
+         -> Template     -- ^ The Template to use in Transloadit
+         -> Text         -- ^ The id of the form to attach to
+         -> Secret       -- ^ Transloadit Secret
+         -> ParamsResult
 mkParams u k t f s = return (TransloaditParams u k t f s)
 
 data TransloaditResponse = TransloaditResponse { raw :: Text, token :: Text } deriving (Show)
@@ -75,6 +80,7 @@ data TransloaditResponse = TransloaditResponse { raw :: Text, token :: Text } de
 data Upload = Upload Text deriving (Show)
 instance FromJSON Upload where
   parseJSON (Object o) = Upload <$> (o .: "ssl_url")
+  parseJSON _ = mzero
 
 formatExpiryTime :: UTCTime -> Text
 formatExpiryTime = pack . formatTime defaultTimeLocale "%Y/%m/%d %H:%M:%S+00:00"
@@ -100,6 +106,7 @@ sign cfg = (show . hmacGetDigest) h
         h = hmac (s cfg) ((BSL.toStrict . encode) cfg)
         s (transloaditSecret -> Secret s') = s'
 
+-- | Calculate the signature, and embed Javascript to attach Transloadit to the form.
 transloadIt :: (YesodJquery m, YesodTransloadit m) => TransloaditParams -> WidgetT m IO Signature
 transloadIt t@(TransloaditParams {..}) = do
   master <- getYesod
@@ -117,11 +124,14 @@ transloadIt t@(TransloaditParams {..}) = do
   |]
   return signature
 
+-- | Helper method to grab the current CSRF token from the session. Returns 'mempty' if 'Nothing'
+-- could be found.
 tokenText :: (YesodJquery m, YesodTransloadit m) => WidgetT m IO Text
 tokenText = do
   csrfToken <- fmap reqToken getRequest
   return $ fromMaybe mempty csrfToken
 
+-- | Helper method to pull the Transloadit response and the CSRF token (named @_token@) from the request.
 handleTransloadit :: (RenderMessage m FormMessage, YesodJquery m, YesodTransloadit m) => WidgetT m IO (Maybe Text)
 handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
@@ -133,6 +143,7 @@ handleTransloadit = do
     True -> return $ raw d
     _ -> Nothing
 
+-- | Helper method to pull the first @ssl_url@ from the Transloadit response.
 extractFirstResult :: AsValue s => Text -> Maybe s -> Maybe Value
 extractFirstResult _ Nothing = Nothing
 extractFirstResult k (Just uploads) = uploads ^? AL.key "results" . AL.key k . nth 0 . AL.key "ssl_url"
