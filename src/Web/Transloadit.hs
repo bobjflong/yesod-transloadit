@@ -19,7 +19,8 @@ module Web.Transloadit (
     Key(..),
     Template(..),
     Secret(..),
-    TransloaditParams
+    TransloaditParams,
+    Signature
   ) where
 
 import           Control.Applicative
@@ -98,10 +99,10 @@ instance ToJSON TransloaditParams where
 encodeText :: ToJSON a => a -> TL.Text
 encodeText = toLazyText . encodeToTextBuilder . toJSON
 
-type Signature = String
+type Signature = Text
 
 sign :: TransloaditParams -> Signature
-sign cfg = (show . hmacGetDigest) h
+sign cfg = (pack . show . hmacGetDigest) h
   where h :: HMAC SHA1
         h = hmac (s cfg) ((BSL.toStrict . encode) cfg)
         s (transloaditSecret -> Secret s') = s'
