@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                transloadit-yesod
-version:             0.1.0.1
+version:             0.1.0.0
 synopsis:            Transloadit support for Yesod
 description:         Drop in Transloadit capabilites for Yesod web apps
 license:             MIT
