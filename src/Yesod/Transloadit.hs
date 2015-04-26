@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ViewPatterns          #-}
 
-module Web.Transloadit (
+module Yesod.Transloadit (
     YesodTransloadit(..),
     mkParams,
     transloadIt,
