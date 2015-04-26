@@ -1,4 +1,4 @@
-# transloadit-yesod [![Build Status](https://travis-ci.org/bobjflong/transloadit-yesod.svg?branch=master)](https://travis-ci.org/bobjflong/transloadit-yesod)
+# yesod-transloadit [![Build Status](https://travis-ci.org/bobjflong/transloadit-yesod.svg?branch=master)](https://travis-ci.org/bobjflong/transloadit-yesod)
 
 This is a reusable Yesod widget for the [Transloadit](https://transloadit.com/) web service.
 This widget:

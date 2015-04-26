@@ -5,9 +5,9 @@ let pkg = haskellngPackages.callPackage
              , time, transformers, yesod, yesod-core, yesod-form, yesod-test
              }:
              mkDerivation {
-               pname = "transloadit-yesod";
+               pname = "yesod-transloadit";
                version = "0.1.0.0";
-               sha256 = "deleteme";
+               sha256 = "0";
                buildDepends = [
                  aeson base byteable bytestring cryptohash lens lens-aeson
                  old-locale shakespeare text time transformers yesod yesod-core
@@ -16,6 +16,7 @@ let pkg = haskellngPackages.callPackage
                testDepends = [
                  base hspec old-locale text time yesod yesod-form yesod-test
                ];
+               description = "Transloadit support for Yesod";
                license = stdenv.lib.licenses.mit;
              }) {};
 in
