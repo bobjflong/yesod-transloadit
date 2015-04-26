@@ -10,10 +10,10 @@ import           Data.Text
 import           Data.Time
 import           System.Locale
 import           Test.Hspec
-import           Web.Transloadit
 import           Yesod             hiding (Key, get)
 import           Yesod.Form.Jquery (YesodJquery (..))
 import           Yesod.Test
+import           Yesod.Transloadit
 
 data Test = Test
 mkYesod "Test" [parseRoutes| / HomeR GET |]
