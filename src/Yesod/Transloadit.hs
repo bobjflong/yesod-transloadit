@@ -28,16 +28,13 @@ import           Control.Lens.Operators hiding ((.=))
 import           Control.Monad          (mzero)
 import           Crypto.Hash
 import           Data.Aeson
-import           Data.Aeson.Encode      (encodeToTextBuilder)
 import           Data.Aeson.Lens        hiding (key)
 import qualified Data.Aeson.Lens        as AL
 import qualified Data.ByteString        as BS
-import qualified Data.ByteString.Lazy   as BSL
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text
-import qualified Data.Text.Lazy         as TL
-import           Data.Text.Lazy.Builder (toLazyText)
+import           Data.Text.Encoding
 import           Data.Time
 import           System.Locale
 import           Text.Julius
@@ -95,16 +92,20 @@ instance ToJSON TransloaditParams where
       "template_id" .= t
     ]
 
--- http://www.yesodweb.com/blog/2012/10/jqplot-widget
-encodeText :: ToJSON a => a -> TL.Text
-encodeText = toLazyText . encodeToTextBuilder . toJSON
+-- encodeParams is similar to the exported ToJSON instance, except that it gives us the same order
+-- output of keys each time. This is very useful for testing that signatures are correct.
+encodeParams :: TransloaditParams -> Text
+encodeParams (TransloaditParams a (Key k) (Template t) _ _) = mconcat [
+  "{\"auth\":{\"expires\":\"", (formatExpiryTime a),
+  "\",\"key\":\"", k, "\"},",
+  "\"template_id\":\"", t, "\"}"]
 
 type Signature = Text
 
 sign :: TransloaditParams -> Signature
 sign cfg = (pack . show . hmacGetDigest) h
   where h :: HMAC SHA1
-        h = hmac (s cfg) ((BSL.toStrict . encode) cfg)
+        h = hmac (s cfg) ((encodeUtf8 . encodeParams) cfg)
         s (transloaditSecret -> Secret s') = s'
 
 -- | Calculate the signature, and embed Javascript to attach Transloadit to the form.
@@ -119,7 +120,7 @@ transloadIt t@(TransloaditParams {..}) = do
      $(function() {
       $('##{rawJS formIdent}').transloadit({
         wait : true,
-        params : JSON.parse('#{(rawJS . encodeText) t}')
+        params : JSON.parse('#{(rawJS . encodeParams) t}')
       });
     });
   |]
