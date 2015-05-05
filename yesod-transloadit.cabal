@@ -1,5 +1,5 @@
 name:                yesod-transloadit
-version:             0.1.1.0
+version:             0.1.3.0
 synopsis:            Transloadit support for Yesod
 description:         Drop in Transloadit capabilites for Yesod web apps
 license:             MIT
