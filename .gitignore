@@ -6,3 +6,4 @@ Main
 dist/
 .cabal-sandbox/
 cabal.sandbox.config
+client_session_key.aes
