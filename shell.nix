@@ -6,7 +6,7 @@ let pkg = haskellngPackages.callPackage
              }:
              mkDerivation {
                pname = "yesod-transloadit";
-               version = "0.1.3.0";
+               version = "0.2.0.0";
                sha256 = "0";
                buildDepends = [
                  aeson base byteable bytestring cryptohash lens lens-aeson
