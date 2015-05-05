@@ -36,7 +36,7 @@ import           Data.Monoid
 import           Data.Text
 import           Data.Text.Encoding
 import           Data.Time
-import           System.Locale
+import qualified System.Locale as SL
 import           Text.Julius
 import           Yesod                  hiding (Key)
 import           Yesod.Form.Jquery      (YesodJquery (..))
@@ -81,7 +81,7 @@ instance FromJSON Upload where
   parseJSON _ = mzero
 
 formatExpiryTime :: UTCTime -> Text
-formatExpiryTime = pack . formatTime defaultTimeLocale "%Y/%m/%d %H:%M:%S+00:00"
+formatExpiryTime = pack . formatTime SL.defaultTimeLocale "%Y/%m/%d %H:%M:%S+00:00"
 
 instance ToJSON TransloaditParams where
   toJSON (TransloaditParams a (Key k) (Template t) _ _) = object [
