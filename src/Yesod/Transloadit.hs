@@ -23,21 +23,23 @@ module Yesod.Transloadit (
     Signature
   ) where
 
-import           Control.Lens.Operators hiding ((.=))
-import           Control.Monad          (mzero)
+import           Control.Lens.Operators        hiding ((.=))
+import           Control.Monad                 (mzero)
 import           Crypto.Hash
 import           Data.Aeson
-import           Data.Aeson.Lens        hiding (key)
-import qualified Data.Aeson.Lens        as AL
-import qualified Data.ByteString        as BS
+import           Data.Aeson.Lens               hiding (key)
+import qualified Data.Aeson.Lens               as AL
+import qualified Data.ByteString               as BS
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text
 import           Data.Text.Encoding
 import           Data.Time
 import           Text.Julius
-import           Yesod                  hiding (Key)
-import           Yesod.Form.Jquery      (YesodJquery (..))
+import           Yesod                         hiding (Key)
+import           Yesod.Form.Jquery             (YesodJquery (..))
+import           Yesod.Transloadit.OrderedJSON hiding (encode)
+import qualified Yesod.Transloadit.OrderedJSON as OJ
 
 -- | Typeclass for your website to enable using Transloadit.
 class YesodTransloadit master where
@@ -93,10 +95,14 @@ instance ToJSON TransloaditParams where
 -- encodeParams is similar to the exported ToJSON instance, except that it gives us the same order
 -- output of keys each time. This is very useful for testing that signatures are correct.
 encodeParams :: TransloaditParams -> Text
-encodeParams (TransloaditParams a (Key k) (Template t) _ _) = mconcat [
-  "{\"auth\":{\"expires\":\"", (formatExpiryTime a),
-  "\",\"key\":\"", k, "\"},",
-  "\"template_id\":\"", t, "\"}"]
+encodeParams (TransloaditParams a (Key k) (Template t) _ _) = OJ.encode params
+  where params = obj [
+                   "auth" `is` obj [
+                                 "expires" `is` (str $ formatExpiryTime a),
+                                 "key" `is` (str k)
+                               ],
+                   "template_id" `is` (str t)
+                 ]
 
 type Signature = Text
 

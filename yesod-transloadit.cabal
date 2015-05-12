@@ -18,6 +18,7 @@ source-repository head
 library
   exposed-modules:     Yesod.Transloadit
   ghc-options:         -Wall
+  other-modules:       Yesod.Transloadit.OrderedJSON
   build-depends:       base < 5
                        , aeson
                        , text
