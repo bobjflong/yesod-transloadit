@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Yesod.Transloadit.OrderedJSON (
@@ -8,6 +9,7 @@ module Yesod.Transloadit.OrderedJSON (
   ) where
 
 import           Data.Text
+import           Data.Monoid (mconcat)
 
 type KeyValue = (Text, OrderedValue)
 

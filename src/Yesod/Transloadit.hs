@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -23,6 +24,7 @@ module Yesod.Transloadit (
     Signature
   ) where
 
+import           Control.Applicative
 import           Control.Lens.Operators        hiding ((.=))
 import           Control.Monad                 (mzero)
 import           Crypto.Hash
@@ -40,6 +42,10 @@ import           Yesod                         hiding (Key)
 import           Yesod.Form.Jquery             (YesodJquery (..))
 import           Yesod.Transloadit.OrderedJSON hiding (encode)
 import qualified Yesod.Transloadit.OrderedJSON as OJ
+#if MIN_VERSION_time(1,5,0)
+#else
+import           System.Locale                 (defaultTimeLocale)
+#endif
 
 -- | Typeclass for your website to enable using Transloadit.
 class YesodTransloadit master where
