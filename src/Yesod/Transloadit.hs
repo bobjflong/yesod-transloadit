@@ -25,6 +25,7 @@ module Yesod.Transloadit (
     Signature
   ) where
 
+import           Control.Applicative
 import           Control.Lens.Operators        hiding ((.=))
 import           Control.Monad                 (mzero)
 import           Crypto.Hash
