@@ -149,9 +149,7 @@ handleTransloadit :: (RenderMessage m FormMessage, YesodJquery m, YesodTransload
 handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
                                           <*> ireq hiddenField "_token"
-
   t <- tokenText
-
   return $ case (token d == t) of
     True -> return $ raw d
     _ -> Nothing
