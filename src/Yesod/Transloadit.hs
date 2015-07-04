@@ -15,6 +15,7 @@ module Yesod.Transloadit (
     handleTransloadit,
     tokenText,
     extractFirstResult,
+    extractNthResult,
     ParamsResult,
     ParamsError(..),
     Key(..),
@@ -24,7 +25,6 @@ module Yesod.Transloadit (
     Signature
   ) where
 
-import           Control.Applicative
 import           Control.Lens.Operators        hiding ((.=))
 import           Control.Monad                 (mzero)
 import           Crypto.Hash
@@ -157,8 +157,12 @@ handleTransloadit = do
 
 -- | Helper method to pull the first @ssl_url@ from the Transloadit response.
 extractFirstResult :: AsValue s => Text -> Maybe s -> Maybe Value
-extractFirstResult _ Nothing = Nothing
-extractFirstResult k (Just uploads) = uploads ^? AL.key "results" . AL.key k . nth 0 . AL.key "ssl_url"
+extractFirstResult = extractNthResult 0
+
+-- | Helper method to pull the nth @ssl_url@ from the Transloadit response.
+extractNthResult :: AsValue s => Int -> Text -> Maybe s -> Maybe Value
+extractNthResult _ _ Nothing = Nothing
+extractNthResult i k (Just uploads) = uploads ^? AL.key "results" . AL.key k . nth i . AL.key "ssl_url"
 
 {-
 -- Example web service demonstrating usage of the transloadIt widget
