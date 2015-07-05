@@ -4,7 +4,6 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ViewPatterns          #-}
 
@@ -82,11 +81,6 @@ mkParams u k t f s = return (TransloaditParams u k t f s)
 
 data TransloaditResponse = TransloaditResponse { raw :: Text, token :: Text } deriving (Show)
 
-data Upload = Upload Text deriving (Show)
-instance FromJSON Upload where
-  parseJSON (Object o) = Upload <$> (o .: "ssl_url")
-  parseJSON _ = mzero
-
 formatExpiryTime :: UTCTime -> Text
 formatExpiryTime = pack . formatTime defaultTimeLocale "%Y/%m/%d %H:%M:%S+00:00"
 
@@ -94,7 +88,7 @@ instance ToJSON TransloaditParams where
   toJSON (TransloaditParams a (Key k) (Template t) _ _) = object [
       "auth" .= object [
         "key" .= k,
-        "expires" .= (formatExpiryTime a)
+        "expires" .= formatExpiryTime a
       ],
       "template_id" .= t
     ]
@@ -105,10 +99,10 @@ encodeParams :: TransloaditParams -> Text
 encodeParams (TransloaditParams a (Key k) (Template t) _ _) = OJ.encode params
   where params = obj [
                    "auth" `is` obj [
-                                 "expires" `is` (str $ formatExpiryTime a),
-                                 "key" `is` (str k)
+                                 "expires" `is` str (formatExpiryTime a),
+                                 "key" `is` str k
                                ],
-                   "template_id" `is` (str t)
+                   "template_id" `is` str t
                  ]
 
 type Signature = Text
@@ -150,7 +144,7 @@ handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
                                           <*> ireq hiddenField "_token"
   t <- tokenText
-  return $ case (token d == t) of
+  return $ case token d == t of
     True -> return $ raw d
     _ -> Nothing
 
