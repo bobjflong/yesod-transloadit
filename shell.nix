@@ -1,23 +1,31 @@
-with (import <nixpkgs> {}).pkgs;
-let pkg = haskellngPackages.callPackage
-            ({ mkDerivation, aeson, base, byteable, bytestring, cryptohash
-             , hspec, lens, lens-aeson, old-locale, shakespeare, stdenv, text
-             , time, transformers, yesod, yesod-core, yesod-form, yesod-test
-             }:
-             mkDerivation {
-               pname = "yesod-transloadit";
-               version = "0.2.1.0";
-               sha256 = "0";
-               buildDepends = [
-                 aeson base byteable bytestring cryptohash lens lens-aeson
-                 old-locale shakespeare text time transformers yesod yesod-core
-                 yesod-form
-               ];
-               testDepends = [
-                 base hspec old-locale text time yesod yesod-form yesod-test
-               ];
-               description = "Transloadit support for Yesod";
-               license = stdenv.lib.licenses.mit;
-             }) {};
+{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc7101" }:
+
+let
+
+  inherit (nixpkgs) pkgs;
+
+  f = { mkDerivation, aeson, base, byteable, bytestring, cryptohash
+      , hspec, lens, lens-aeson, old-locale, shakespeare, stdenv, text
+      , time, transformers, yesod, yesod-core, yesod-form, yesod-test
+      }:
+      mkDerivation {
+        pname = "yesod-transloadit";
+        version = "0.2.1.0";
+        src = ./.;
+        buildDepends = [
+          aeson base byteable bytestring cryptohash lens lens-aeson
+          old-locale shakespeare text time transformers yesod yesod-core
+          yesod-form
+        ];
+        testDepends = [
+          base hspec old-locale text time yesod yesod-form yesod-test
+        ];
+        description = "Transloadit support for Yesod";
+        license = stdenv.lib.licenses.mit;
+      };
+
+  drv = pkgs.haskell.packages.${compiler}.callPackage f {};
+
 in
-  pkg.env
+
+  if pkgs.lib.inNixShell then drv.env else drv
