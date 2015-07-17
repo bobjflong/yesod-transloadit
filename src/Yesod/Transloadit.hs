@@ -84,15 +84,6 @@ data TransloaditResponse = TransloaditResponse { raw :: Text, token :: Text } de
 formatExpiryTime :: UTCTime -> Text
 formatExpiryTime = pack . formatTime defaultTimeLocale "%Y/%m/%d %H:%M:%S+00:00"
 
-instance ToJSON TransloaditParams where
-  toJSON (TransloaditParams a (Key k) (Template t) _ _) = object [
-      "auth" .= object [
-        "key" .= k,
-        "expires" .= formatExpiryTime a
-      ],
-      "template_id" .= t
-    ]
-
 -- encodeParams is similar to the exported ToJSON instance, except that it gives us the same order
 -- output of keys each time. This is very useful for testing that signatures are correct.
 encodeParams :: TransloaditParams -> Text
