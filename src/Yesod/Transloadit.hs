@@ -6,6 +6,7 @@
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Yesod.Transloadit (
     YesodTransloadit(..),
@@ -13,8 +14,16 @@ module Yesod.Transloadit (
     transloadIt,
     handleTransloadit,
     tokenText,
-    extractFirstResult,
-    extractNthResult,
+    nthStepResult,
+    StepResult,
+    resultId,
+    name,
+    baseName,
+    extension,
+    mime,
+    field,
+    url,
+    sslUrl,
     ParamsResult,
     ParamsError(..),
     Key(..),
@@ -25,8 +34,9 @@ module Yesod.Transloadit (
   ) where
 
 import           Control.Applicative
-import           Control.Lens.Operators        hiding ((.=))
-import           Control.Monad                 (mzero)
+import           Control.Lens
+import           Control.Monad
+import qualified Data.HashMap.Strict as HM
 import           Crypto.Hash
 import           Data.Aeson
 import           Data.Aeson.Lens               hiding (key)
@@ -65,6 +75,18 @@ data TransloaditParams = TransloaditParams {
   transloaditTemplate :: Template,
   formIdent           :: Text,
   transloaditSecret   :: Secret
+} deriving (Show)
+
+-- | The result of the execution of a single step
+data StepResult = StepResult {
+  _resultId :: Text,
+  _name :: Text,
+  _baseName :: Text,
+  _extension :: Text,
+  _mime :: Text,
+  _field :: Text,
+  _url :: Text,
+  _sslUrl :: Text
 } deriving (Show)
 
 data ParamsError = UnknownError
@@ -139,11 +161,25 @@ handleTransloadit = do
     True -> return $ raw d
     _ -> Nothing
 
--- | Helper method to pull the first @ssl_url@ from the Transloadit response.
-extractFirstResult :: AsValue s => Text -> Maybe s -> Maybe Value
-extractFirstResult = extractNthResult 0
+_stepResult :: Getter Object (Maybe StepResult)
+_stepResult = to parseResult
 
--- | Helper method to pull the nth @ssl_url@ from the Transloadit response.
-extractNthResult :: AsValue s => Int -> Text -> Maybe s -> Maybe Value
-extractNthResult _ _ Nothing = Nothing
-extractNthResult i k (Just uploads) = uploads ^? AL.key "results" . AL.key k . nth i . AL.key "ssl_url"
+parseResult :: Object -> (Maybe StepResult)
+parseResult hm = StepResult <$> (v "id")
+                 <*> (v "name")
+                 <*> (v "basename")
+                 <*> (v "ext")
+                 <*> (v "mime")
+                 <*> (v "field")
+                 <*> (v "url")
+                 <*> (v "ssl_url")
+  where v s = case HM.lookup s hm of
+          (Just (String t)) -> Just t
+          _ -> Nothing
+
+-- | Helper method to pull the nth @StepResult@ for a given key from the Transloadit response
+nthStepResult :: AsValue s => Int -> Text -> Maybe s -> Maybe StepResult
+nthStepResult _ _ Nothing = Nothing
+nthStepResult i k (Just u) = join $ u ^? AL.key "results" . AL.key k . nth i . _Object . _stepResult
+
+$(makeLenses ''StepResult)
