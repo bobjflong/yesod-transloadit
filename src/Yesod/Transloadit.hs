@@ -4,9 +4,9 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ViewPatterns          #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Yesod.Transloadit (
     YesodTransloadit(..),
@@ -36,12 +36,12 @@ module Yesod.Transloadit (
 import           Control.Applicative
 import           Control.Lens
 import           Control.Monad
-import qualified Data.HashMap.Strict as HM
 import           Crypto.Hash
 import           Data.Aeson
 import           Data.Aeson.Lens               hiding (key)
 import qualified Data.Aeson.Lens               as AL
 import qualified Data.ByteString               as BS
+import qualified Data.HashMap.Strict           as HM
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text
@@ -79,14 +79,14 @@ data TransloaditParams = TransloaditParams {
 
 -- | The result of the execution of a single step
 data StepResult = StepResult {
-  _resultId :: Text,
-  _name :: Text,
-  _baseName :: Text,
+  _resultId  :: Text,
+  _name      :: Text,
+  _baseName  :: Text,
   _extension :: Text,
-  _mime :: Text,
-  _field :: Text,
-  _url :: Text,
-  _sslUrl :: Text
+  _mime      :: Text,
+  _field     :: Text,
+  _url       :: Text,
+  _sslUrl    :: Text
 } deriving (Show)
 
 data ParamsError = UnknownError
@@ -157,22 +157,20 @@ handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
                                           <*> ireq hiddenField "_token"
   t <- tokenText
-  return $ case token d == t of
-    True -> return $ raw d
-    _ -> Nothing
+  return $ if token d == t then return (raw d) else Nothing
 
 _stepResult :: Getter Object (Maybe StepResult)
 _stepResult = to parseResult
 
-parseResult :: Object -> (Maybe StepResult)
-parseResult hm = StepResult <$> (v "id")
-                 <*> (v "name")
-                 <*> (v "basename")
-                 <*> (v "ext")
-                 <*> (v "mime")
-                 <*> (v "field")
-                 <*> (v "url")
-                 <*> (v "ssl_url")
+parseResult :: Object -> Maybe StepResult
+parseResult hm = StepResult <$> v "id"
+                 <*> v "name"
+                 <*> v "basename"
+                 <*> v "ext"
+                 <*> v "mime"
+                 <*> v "field"
+                 <*> v "url"
+                 <*> v "ssl_url"
   where v s = case HM.lookup s hm of
           (Just (String t)) -> Just t
           _ -> Nothing

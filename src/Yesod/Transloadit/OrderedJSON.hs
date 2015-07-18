@@ -7,8 +7,8 @@ module Yesod.Transloadit.OrderedJSON (
     str
   ) where
 
-import           Data.Text
 import           Data.Monoid (mconcat)
+import           Data.Text
 
 type KeyValue = (Text, OrderedValue)
 
