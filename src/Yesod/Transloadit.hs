@@ -4,9 +4,9 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ViewPatterns          #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Yesod.Transloadit (
     YesodTransloadit(..),
@@ -36,12 +36,12 @@ module Yesod.Transloadit (
 import           Control.Applicative
 import           Control.Lens
 import           Control.Monad
-import qualified Data.HashMap.Strict as HM
 import           Crypto.Hash
 import           Data.Aeson
 import           Data.Aeson.Lens               hiding (key)
 import qualified Data.Aeson.Lens               as AL
 import qualified Data.ByteString               as BS
+import qualified Data.HashMap.Strict           as HM
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text
@@ -79,14 +79,14 @@ data TransloaditParams = TransloaditParams {
 
 -- | The result of the execution of a single step
 data StepResult = StepResult {
-  _resultId :: Text,
-  _name :: Text,
-  _baseName :: Text,
+  _resultId  :: Text,
+  _name      :: Text,
+  _baseName  :: Text,
   _extension :: Text,
-  _mime :: Text,
-  _field :: Text,
-  _url :: Text,
-  _sslUrl :: Text
+  _mime      :: Text,
+  _field     :: Text,
+  _url       :: Text,
+  _sslUrl    :: Text
 } deriving (Show)
 
 data ParamsError = UnknownError
