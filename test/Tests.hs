@@ -6,6 +6,10 @@
 
 module Main where
 
+import           Control.Lens
+import           Data.Aeson
+import           Data.Map
+import           Data.Maybe
 import           Data.Text
 import           Data.Time
 import           System.Locale
@@ -55,6 +59,13 @@ getHomeR = defaultLayout $ do
   |]
   return ()
 
+sampleDict :: Map Text (Map Text [(Map Text Text)])
+sampleDict = fromList [("results", results)]
+             where results = fromList [("foo", stepResults)]
+                   stepResults = [fromList [("id","<id>"), ("name", "n"), ("basename", "b"), ("ext", "e"), ("mime", "m"), ("field", "f"), ("url", "u"), ("ssl_url", "<ssl_url>")]]
+
+sampleResult = fromJust $ nthStepResult 0 "foo" (return $ encode sampleDict)
+
 formGenSpecs :: Spec
 formGenSpecs = yesodSpec Test $ do
   ydescribe "Form generation" $ do
@@ -71,8 +82,21 @@ formGenSpecs = yesodSpec Test $ do
       get HomeR
       bodyContains "<script src=\"https://assets.transloadit.com/js/jquery.transloadit2-v2-latest.js\"></script>"
   ydescribe "Response parsing" $ do
-    yit "works" $ do
-      let sample = Just "{\"results\":{\"foo\":[{\"ssl_url\":\"bar\"}]}}" :: Maybe Text
-      assertEqual "Basic example" (extractFirstResult "foo" sample) (Just (String "bar"))
+    yit "grabs ssl_url" $ do
+      assertEqual "ssl_url" (sampleResult ^. sslUrl) ("<ssl_url>" :: Text)
+    yit "grabs id" $ do
+      assertEqual "id" (sampleResult ^. resultId) ("<id>" :: Text)
+    yit "grabs name" $ do
+      assertEqual "name" (sampleResult ^. name) ("n" :: Text)
+    yit "grabs basename" $ do
+      assertEqual "basename" (sampleResult ^. baseName) ("b" :: Text)
+    yit "grabs extension" $ do
+      assertEqual "ext" (sampleResult ^. extension) ("e" :: Text)
+    yit "grabs mime" $ do
+      assertEqual "mime" (sampleResult ^. mime) ("m" :: Text)
+    yit "grabs field" $ do
+      assertEqual "field" (sampleResult ^. field) ("f" :: Text)
+    yit "grabs url" $ do
+      assertEqual "url" (sampleResult ^. url) ("u" :: Text)
 
 main = hspec formGenSpecs

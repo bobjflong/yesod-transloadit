@@ -4,9 +4,10 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, aeson, base, byteable, bytestring, cryptohash
-      , hspec, lens, lens-aeson, old-locale, shakespeare, stdenv, text
-      , time, transformers, yesod, yesod-core, yesod-form, yesod-test
+  f = { mkDerivation, aeson, base, byteable, bytestring, containers
+      , cryptohash, hspec, lens, lens-aeson, old-locale, shakespeare
+      , stdenv, text, time, transformers, unordered-containers, yesod
+      , yesod-core, yesod-form, yesod-test
       }:
       mkDerivation {
         pname = "yesod-transloadit";
@@ -14,11 +15,12 @@ let
         src = ./.;
         buildDepends = [
           aeson base byteable bytestring cryptohash lens lens-aeson
-          old-locale shakespeare text time transformers yesod yesod-core
-          yesod-form
+          old-locale shakespeare text time transformers unordered-containers
+          yesod yesod-core yesod-form
         ];
         testDepends = [
-          base hspec old-locale text time yesod yesod-form yesod-test
+          aeson base containers hspec lens old-locale text time yesod
+          yesod-form yesod-test
         ];
         description = "Transloadit support for Yesod";
         license = stdenv.lib.licenses.mit;
