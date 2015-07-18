@@ -157,22 +157,20 @@ handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
                                           <*> ireq hiddenField "_token"
   t <- tokenText
-  return $ case token d == t of
-    True -> return $ raw d
-    _ -> Nothing
+  return $ if token d == t then return (raw d) else Nothing
 
 _stepResult :: Getter Object (Maybe StepResult)
 _stepResult = to parseResult
 
-parseResult :: Object -> (Maybe StepResult)
-parseResult hm = StepResult <$> (v "id")
-                 <*> (v "name")
-                 <*> (v "basename")
-                 <*> (v "ext")
-                 <*> (v "mime")
-                 <*> (v "field")
-                 <*> (v "url")
-                 <*> (v "ssl_url")
+parseResult :: Object -> Maybe StepResult
+parseResult hm = StepResult <$> v "id"
+                 <*> v "name"
+                 <*> v "basename"
+                 <*> v "ext"
+                 <*> v "mime"
+                 <*> v "field"
+                 <*> v "url"
+                 <*> v "ssl_url"
   where v s = case HM.lookup s hm of
           (Just (String t)) -> Just t
           _ -> Nothing
