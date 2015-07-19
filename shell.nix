@@ -11,7 +11,7 @@ let
       }:
       mkDerivation {
         pname = "yesod-transloadit";
-        version = "0.2.1.0";
+        version = "0.3.0.0";
         src = ./.;
         buildDepends = [
           aeson base byteable bytestring cryptohash lens lens-aeson
