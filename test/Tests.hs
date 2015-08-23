@@ -71,7 +71,6 @@ formGenSpecs = yesodSpec Test $ do
   ydescribe "Form generation" $ do
     yit "adds correct Transloadit params" $ do
       get HomeR
-      printBody
       bodyContains "params : JSON.parse(\"{\\\"auth\\\":{\\\"expires\\\":\\\"1995/10/10 01:00:10+00:00\\\",\\\"key\\\":\\\"my_key\\\"},\\\"template_id\\\":\\\"my_template\\\"}\")"
     yit "computes the correct signature" $ do
       get HomeR
