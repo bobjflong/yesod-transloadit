@@ -59,7 +59,7 @@ getHomeR = defaultLayout $ do
   |]
   return ()
 
-sampleDict :: Map Text (Map Text [(Map Text Text)])
+sampleDict :: Map Text (Map Text [Map Text Text])
 sampleDict = fromList [("results", results)]
              where results = fromList [("foo", stepResults)]
                    stepResults = [fromList [("id","<id>"), ("name", "n"), ("basename", "b"), ("ext", "e"), ("mime", "m"), ("field", "f"), ("url", "u"), ("ssl_url", "<ssl_url>")]]
@@ -71,7 +71,8 @@ formGenSpecs = yesodSpec Test $ do
   ydescribe "Form generation" $ do
     yit "adds correct Transloadit params" $ do
       get HomeR
-      bodyContains "params : JSON.parse('{\"auth\":{\"expires\":\"1995/10/10 01:00:10+00:00\",\"key\":\"my_key\"},\"template_id\":\"my_template\"}')"
+      printBody
+      bodyContains "params : JSON.parse(\"{\\\"auth\\\":{\\\"expires\\\":\\\"1995/10/10 01:00:10+00:00\\\",\\\"key\\\":\\\"my_key\\\"},\\\"template_id\\\":\\\"my_template\\\"}\")"
     yit "computes the correct signature" $ do
       get HomeR
       bodyContains "<input type=\"hidden\" name=\"signature\" value=\"ad2784ec20c0f2d486125141409763ea603e1a10\">"
@@ -82,21 +83,13 @@ formGenSpecs = yesodSpec Test $ do
       get HomeR
       bodyContains "<script src=\"https://assets.transloadit.com/js/jquery.transloadit2-v2-latest.js\"></script>"
   ydescribe "Response parsing" $ do
-    yit "grabs ssl_url" $ do
-      assertEqual "ssl_url" (sampleResult ^. sslUrl) ("<ssl_url>" :: Text)
-    yit "grabs id" $ do
-      assertEqual "id" (sampleResult ^. resultId) ("<id>" :: Text)
-    yit "grabs name" $ do
-      assertEqual "name" (sampleResult ^. name) ("n" :: Text)
-    yit "grabs basename" $ do
-      assertEqual "basename" (sampleResult ^. baseName) ("b" :: Text)
-    yit "grabs extension" $ do
-      assertEqual "ext" (sampleResult ^. extension) ("e" :: Text)
-    yit "grabs mime" $ do
-      assertEqual "mime" (sampleResult ^. mime) ("m" :: Text)
-    yit "grabs field" $ do
-      assertEqual "field" (sampleResult ^. field) ("f" :: Text)
-    yit "grabs url" $ do
-      assertEqual "url" (sampleResult ^. url) ("u" :: Text)
+    yit "grabs ssl_url" $ assertEqual "ssl_url" (sampleResult ^. sslUrl) ("<ssl_url>" :: Text)
+    yit "grabs id" $ assertEqual "id" (sampleResult ^. resultId) ("<id>" :: Text)
+    yit "grabs name" $ assertEqual "name" (sampleResult ^. name) ("n" :: Text)
+    yit "grabs basename" $ assertEqual "basename" (sampleResult ^. baseName) ("b" :: Text)
+    yit "grabs extension" $ assertEqual "ext" (sampleResult ^. extension) ("e" :: Text)
+    yit "grabs mime" $ assertEqual "mime" (sampleResult ^. mime) ("m" :: Text)
+    yit "grabs field" $ assertEqual "field" (sampleResult ^. field) ("f" :: Text)
+    yit "grabs url" $ assertEqual "url" (sampleResult ^. url) ("u" :: Text)
 
 main = hspec formGenSpecs

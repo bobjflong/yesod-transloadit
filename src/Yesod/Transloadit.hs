@@ -89,6 +89,8 @@ data StepResult = StepResult {
   _sslUrl    :: Text
 } deriving (Show)
 
+$(makeLenses ''StepResult)
+
 data ParamsError = UnknownError
 type ParamsResult = Either ParamsError TransloaditParams
 
@@ -132,13 +134,14 @@ transloadIt t@(TransloaditParams {..}) = do
   master <- getYesod
   let root = transloaditRoot master
       signature = sign t
+      divId = mconcat ["#", formIdent]
   addScriptEither $ urlJqueryJs master
   addScriptRemote $ root <> "jquery.transloadit2-v2-latest.js"
   toWidget [julius|
      $(function() {
-      $('##{rawJS formIdent}').transloadit({
+      $(#{toJSON divId}).transloadit({
         wait : true,
-        params : JSON.parse('#{(rawJS . encodeParams) t}')
+        params : JSON.parse(#{(toJSON . encodeParams) t})
       });
     });
   |]
@@ -178,6 +181,9 @@ parseResult hm = StepResult <$> v "id"
 -- | Helper method to pull the nth @StepResult@ for a given key from the Transloadit response
 nthStepResult :: AsValue s => Int -> Text -> Maybe s -> Maybe StepResult
 nthStepResult _ _ Nothing = Nothing
-nthStepResult i k (Just u) = join $ u ^? AL.key "results" . AL.key k . nth i . _Object . _stepResult
-
-$(makeLenses ''StepResult)
+nthStepResult i k (Just u) = u ^? AL.key "results"
+                             . AL.key k
+                             . nth i
+                             . _Object
+                             . _stepResult
+                             & join
