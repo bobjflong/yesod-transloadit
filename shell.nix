@@ -1,4 +1,4 @@
-{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc7101" }:
+{ nixpkgs ? import <nixpkgs> {}, compiler ? "default" }:
 
 let
 
@@ -11,14 +11,14 @@ let
       }:
       mkDerivation {
         pname = "yesod-transloadit";
-        version = "0.4.0.0";
+        version = "0.4.1.0";
         src = ./.;
-        buildDepends = [
+        libraryHaskellDepends = [
           aeson base byteable bytestring cryptohash lens lens-aeson
           old-locale shakespeare text time transformers unordered-containers
           yesod yesod-core yesod-form
         ];
-        testDepends = [
+        testHaskellDepends = [
           aeson base containers hspec lens old-locale text time yesod
           yesod-form yesod-test
         ];
@@ -26,7 +26,11 @@ let
         license = stdenv.lib.licenses.mit;
       };
 
-  drv = pkgs.haskell.packages.${compiler}.callPackage f {};
+  haskellPackages = if compiler == "default"
+                      then pkgs.haskellPackages
+                      else pkgs.haskell.packages.${compiler};
+
+  drv = haskellPackages.callPackage f {};
 
 in
 
