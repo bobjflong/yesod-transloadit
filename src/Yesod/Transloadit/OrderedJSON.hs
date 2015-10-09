@@ -4,11 +4,14 @@ module Yesod.Transloadit.OrderedJSON (
     encode,
     is,
     obj,
-    str
+    str,
+    alphanum
   ) where
 
+import           Data.Char
 import           Data.Monoid (mconcat)
 import           Data.Text
+import           Prelude     hiding (filter)
 
 type KeyValue = (Text, OrderedValue)
 
@@ -44,3 +47,10 @@ obj = Object
 
 str :: Text -> OrderedValue
 str = String
+
+alphanum :: Text -> OrderedValue
+alphanum = String . filter isAlphaNumOrUnderscore
+
+isAlphaNumOrUnderscore :: Char -> Bool
+isAlphaNumOrUnderscore x = isAlphaNum x || (x == '_')
+

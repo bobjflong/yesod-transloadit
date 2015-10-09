@@ -115,9 +115,9 @@ encodeParams (TransloaditParams a (Key k) (Template t) _ _) = OJ.encode params
   where params = obj [
                    "auth" `is` obj [
                                  "expires" `is` str (formatExpiryTime a),
-                                 "key" `is` str k
+                                 "key" `is` alphanum k
                                ],
-                   "template_id" `is` str t
+                   "template_id" `is` alphanum t
                  ]
 
 type Signature = Text
