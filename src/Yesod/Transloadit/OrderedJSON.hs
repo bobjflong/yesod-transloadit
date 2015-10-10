@@ -5,13 +5,12 @@ module Yesod.Transloadit.OrderedJSON (
     is,
     obj,
     str,
-    alphanum
+    raw
   ) where
-
-import           Data.Char
-import           Data.Monoid (mconcat)
+import           Data.Monoid                (mconcat)
 import           Data.Text
-import           Prelude     hiding (filter)
+import           Language.Javascript.JMacro (JVal (..), renderJs)
+import           Prelude                    hiding (filter)
 
 type KeyValue = (Text, OrderedValue)
 
@@ -36,7 +35,7 @@ encodeKV :: KeyValue -> Text
 encodeKV (t, v) = mconcat [quote, t, quote, colon, encode v]
 
 encode :: OrderedValue -> Text
-encode (String t) = mconcat [quote, t, quote]
+encode (String t) = t
 encode (Object kvs) = mconcat [lbrace, intercalate comma $ fmap encodeKV kvs, rbrace]
 
 is :: Text -> OrderedValue -> KeyValue
@@ -46,11 +45,7 @@ obj :: [KeyValue] -> OrderedValue
 obj = Object
 
 str :: Text -> OrderedValue
-str = String
+str = String . pack . show . renderJs . JStr . unpack
 
-alphanum :: Text -> OrderedValue
-alphanum = String . filter isAlphaNumOrUnderscore
-
-isAlphaNumOrUnderscore :: Char -> Bool
-isAlphaNumOrUnderscore x = isAlphaNum x || (x == '_')
-
+raw :: Text -> OrderedValue
+raw x = String (mconcat [quote, x, quote])

@@ -50,7 +50,7 @@ import           Data.Time
 import           Text.Julius
 import           Yesod                         hiding (Key)
 import           Yesod.Form.Jquery             (YesodJquery (..))
-import           Yesod.Transloadit.OrderedJSON hiding (encode)
+import           Yesod.Transloadit.OrderedJSON hiding (encode, raw)
 import qualified Yesod.Transloadit.OrderedJSON as OJ
 #if MIN_VERSION_time(1,5,0)
 #else
@@ -114,10 +114,10 @@ encodeParams :: TransloaditParams -> Text
 encodeParams (TransloaditParams a (Key k) (Template t) _ _) = OJ.encode params
   where params = obj [
                    "auth" `is` obj [
-                                 "expires" `is` str (formatExpiryTime a),
-                                 "key" `is` alphanum k
+                                 "expires" `is` OJ.raw (formatExpiryTime a),
+                                 "key" `is` OJ.str k
                                ],
-                   "template_id" `is` alphanum t
+                   "template_id" `is` OJ.str t
                  ]
 
 type Signature = Text

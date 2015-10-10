@@ -5,16 +5,16 @@ let
   inherit (nixpkgs) pkgs;
 
   f = { mkDerivation, aeson, base, byteable, bytestring, containers
-      , cryptohash, hspec, lens, lens-aeson, old-locale, shakespeare
-      , stdenv, text, time, transformers, unordered-containers, yesod
-      , yesod-core, yesod-form, yesod-test
+      , cryptohash, hspec, jmacro, lens, lens-aeson, old-locale
+      , shakespeare, stdenv, text, time, transformers
+      , unordered-containers, yesod, yesod-core, yesod-form, yesod-test
       }:
       mkDerivation {
         pname = "yesod-transloadit";
         version = "0.4.1.0";
         src = ./.;
         libraryHaskellDepends = [
-          aeson base byteable bytestring cryptohash lens lens-aeson
+          aeson base byteable bytestring cryptohash jmacro lens lens-aeson
           old-locale shakespeare text time transformers unordered-containers
           yesod yesod-core yesod-form
         ];
@@ -27,8 +27,8 @@ let
       };
 
   haskellPackages = if compiler == "default"
-                      then pkgs.haskellPackages
-                      else pkgs.haskell.packages.${compiler};
+                       then pkgs.haskellPackages
+                       else pkgs.haskell.packages.${compiler};
 
   drv = haskellPackages.callPackage f {};
 
