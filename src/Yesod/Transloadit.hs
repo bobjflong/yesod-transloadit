@@ -52,7 +52,7 @@ import           Data.Time
 import           Text.Julius
 import           Yesod                         hiding (Key)
 import           Yesod.Form.Jquery             (YesodJquery (..))
-import           Yesod.Transloadit.OrderedJSON hiding (encode)
+import           Yesod.Transloadit.OrderedJSON hiding (encode, raw)
 import qualified Yesod.Transloadit.OrderedJSON as OJ
 #if MIN_VERSION_time(1,5,0)
 #else
@@ -116,10 +116,10 @@ encodeParams :: TransloaditParams -> Text
 encodeParams (TransloaditParams a (Key k) (Template t) _ _) = OJ.encode params
   where params = obj [
                    "auth" `is` obj [
-                                 "expires" `is` str (formatExpiryTime a),
-                                 "key" `is` str k
+                                 "expires" `is` OJ.raw (formatExpiryTime a),
+                                 "key" `is` OJ.str k
                                ],
-                   "template_id" `is` str t
+                   "template_id" `is` OJ.str t
                  ]
 
 type Signature = Text
@@ -189,3 +189,52 @@ nthStepResult i k (Just u) = u ^? AL.key "results"
                              . _Object
                              . _stepResult
                              & join
+
+
+data Test = Test
+
+mkYesod "Test" [parseRoutes| / HomeR GET POST |]
+
+instance Yesod Test
+instance YesodJquery Test
+instance YesodTransloadit Test
+
+instance RenderMessage Test FormMessage where
+  renderMessage _ _ = defaultFormMessage
+
+getHomeR :: Handler Html
+getHomeR = defaultLayout $ do
+  now <- liftIO getCurrentTime
+  -- Create an id for your form
+  ident <- newIdent
+  -- Create some Transloadit params, you need: Expiry time; Api key; Template Id; Form id
+  let expiry = addUTCTime 3600 now
+      key = Key "iamfake"
+      template = Template "iamfake"
+      secret = Secret "iamfake"
+      params = TransloaditParams expiry key template ident secret
+  -- Load the widget, and retrieve the given signature
+  sig <- transloadIt params
+  -- CSRF considerations
+  t <- tokenText
+  -- Create a form
+  [whamlet|
+    <form id="#{ident}" action=@{HomeR} method="POST">
+      <input type="hidden" name="_token" value="#{t}">
+      <input type="hidden" name="signature" value="#{sig}">
+      <input type="file" name="my_file">
+      <input type="submit" value="Upload">
+  |]
+  return ()
+
+postHomeR :: Handler Html
+postHomeR = defaultLayout $ do
+  results <- handleTransloadit
+  -- my_template contains a step called "cropped_thumb"
+  case nthStepResult 0 "watermark" results of
+    Just s -> [whamlet| <img src="#{s ^. sslUrl}"/> |]
+    _ -> [whamlet| No results :( |]
+  return ()
+
+exampleServer = warp 4567 Test
+
