@@ -51,10 +51,8 @@ test-suite tests
                        hspec,
                        yesod,
                        yesod-form,
-                       time,
                        old-locale,
                        text,
-                       lens,
                        aeson,
                        containers
 

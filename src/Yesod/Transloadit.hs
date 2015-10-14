@@ -30,7 +30,9 @@ module Yesod.Transloadit (
     Template(..),
     Secret(..),
     TransloaditParams,
-    Signature
+    Signature,
+    module Control.Lens,
+    module Data.Time
   ) where
 
 import           Control.Applicative

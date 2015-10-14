@@ -19,8 +19,8 @@ let
           yesod yesod-core yesod-form
         ];
         testHaskellDepends = [
-          aeson base containers hspec lens old-locale text time yesod
-          yesod-form yesod-test
+          aeson base containers hspec old-locale text yesod yesod-form
+          yesod-test
         ];
         description = "Transloadit support for Yesod";
         license = stdenv.lib.licenses.mit;

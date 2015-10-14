@@ -6,12 +6,10 @@
 
 module Main where
 
-import           Control.Lens
 import           Data.Aeson
 import           Data.Map
 import           Data.Maybe
 import           Data.Text
-import           Data.Time
 import           System.Locale
 import           Test.Hspec
 import           Yesod             hiding (Key, get)
