@@ -3,3 +3,5 @@ packages:
 - '.'
 extra-deps: []
 resolver: lts-3.11
+ghc-options:
+  "*": -Wall
