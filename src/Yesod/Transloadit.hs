@@ -35,6 +35,8 @@ module Yesod.Transloadit (
     module Data.Time
   ) where
 
+import           Codec.MIME.Parse
+import           Codec.MIME.Type
 import           Control.Applicative
 import           Control.Lens
 import           Control.Monad
@@ -85,7 +87,7 @@ data StepResult = StepResult {
   _name      :: Text,
   _baseName  :: Text,
   _extension :: Text,
-  _mime      :: Text,
+  _mime      :: Maybe Type,
   _field     :: Text,
   _url       :: Text,
   _sslUrl    :: Text
@@ -172,7 +174,7 @@ parseResult hm = StepResult <$> v "id"
                  <*> v "name"
                  <*> v "basename"
                  <*> v "ext"
-                 <*> v "mime"
+                 <*> (parseMIMEType <$> v "mime")
                  <*> v "field"
                  <*> v "url"
                  <*> v "ssl_url"
