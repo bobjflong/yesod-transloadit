@@ -6,6 +6,7 @@
 
 module Main where
 
+import           Codec.MIME.Parse
 import           Data.Aeson
 import           Data.Map
 import           Data.Maybe
@@ -60,7 +61,7 @@ getHomeR = defaultLayout $ do
 sampleDict :: Map Text (Map Text [Map Text Text])
 sampleDict = fromList [("results", results)]
              where results = fromList [("foo", stepResults)]
-                   stepResults = [fromList [("id","<id>"), ("name", "n"), ("basename", "b"), ("ext", "e"), ("mime", "m"), ("field", "f"), ("url", "u"), ("ssl_url", "<ssl_url>")]]
+                   stepResults = [fromList [("id","<id>"), ("name", "n"), ("basename", "b"), ("ext", "e"), ("mime", "text/plain"), ("field", "f"), ("url", "u"), ("ssl_url", "<ssl_url>")]]
 
 sampleResult = fromJust $ nthStepResult 0 "foo" (return $ encode sampleDict)
 
@@ -85,7 +86,7 @@ formGenSpecs = yesodSpec Test $ do
     yit "grabs name" $ assertEqual "name" (sampleResult ^. name) ("n" :: Text)
     yit "grabs basename" $ assertEqual "basename" (sampleResult ^. baseName) ("b" :: Text)
     yit "grabs extension" $ assertEqual "ext" (sampleResult ^. extension) ("e" :: Text)
-    yit "grabs mime" $ assertEqual "mime" (sampleResult ^. mime) ("m" :: Text)
+    yit "grabs mime" $ assertEqual "mime" (sampleResult ^. mime) (parseMIMEType "text/plain")
     yit "grabs field" $ assertEqual "field" (sampleResult ^. field) ("f" :: Text)
     yit "grabs url" $ assertEqual "url" (sampleResult ^. url) ("u" :: Text)
 
