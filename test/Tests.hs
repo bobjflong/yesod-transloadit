@@ -11,6 +11,7 @@ import           Data.Aeson
 import           Data.Map
 import           Data.Maybe
 import           Data.Text
+import           Network.URI
 import           System.Locale
 import           Test.Hspec
 import           Yesod             hiding (Key, get)
@@ -61,7 +62,7 @@ getHomeR = defaultLayout $ do
 sampleDict :: Map Text (Map Text [Map Text Text])
 sampleDict = fromList [("results", results)]
              where results = fromList [("foo", stepResults)]
-                   stepResults = [fromList [("id","<id>"), ("name", "n"), ("basename", "b"), ("ext", "e"), ("mime", "text/plain"), ("field", "f"), ("url", "u"), ("ssl_url", "<ssl_url>")]]
+                   stepResults = [fromList [("id","<id>"), ("name", "n"), ("basename", "b"), ("ext", "e"), ("mime", "text/plain"), ("field", "f"), ("url", "http://foo.com"), ("ssl_url", "https://foo.com")]]
 
 sampleResult = fromJust $ nthStepResult 0 "foo" (return $ encode sampleDict)
 
@@ -81,13 +82,13 @@ formGenSpecs = yesodSpec Test $ do
       get HomeR
       bodyContains "<script src=\"https://assets.transloadit.com/js/jquery.transloadit2-v2-latest.js\"></script>"
   ydescribe "Response parsing" $ do
-    yit "grabs ssl_url" $ assertEqual "ssl_url" (sampleResult ^. sslUrl) ("<ssl_url>" :: Text)
+    yit "grabs ssl_url" $ assertEqual "ssl_url" (sampleResult ^. sslUrl) (parseURI "https://foo.com")
     yit "grabs id" $ assertEqual "id" (sampleResult ^. resultId) ("<id>" :: Text)
     yit "grabs name" $ assertEqual "name" (sampleResult ^. name) ("n" :: Text)
     yit "grabs basename" $ assertEqual "basename" (sampleResult ^. baseName) ("b" :: Text)
     yit "grabs extension" $ assertEqual "ext" (sampleResult ^. extension) ("e" :: Text)
     yit "grabs mime" $ assertEqual "mime" (sampleResult ^. mime) (parseMIMEType "text/plain")
     yit "grabs field" $ assertEqual "field" (sampleResult ^. field) ("f" :: Text)
-    yit "grabs url" $ assertEqual "url" (sampleResult ^. url) ("u" :: Text)
+    yit "grabs url" $ assertEqual "url" (sampleResult ^. url) (parseURI "http://foo.com")
 
 main = hspec formGenSpecs

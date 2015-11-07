@@ -5,8 +5,8 @@ let
   inherit (nixpkgs) pkgs;
 
   f = { mkDerivation, aeson, base, byteable, bytestring, containers
-      , cryptohash, hspec, lens, lens-aeson, mime, old-locale
-      , shakespeare, stdenv, text, time, transformers
+      , cryptohash, hspec, lens, lens-aeson, mime, network-uri
+      , old-locale, shakespeare, stdenv, text, time, transformers
       , unordered-containers, yesod, yesod-core, yesod-form, yesod-test
       }:
       mkDerivation {
@@ -15,12 +15,12 @@ let
         src = ./.;
         libraryHaskellDepends = [
           aeson base byteable bytestring cryptohash lens lens-aeson mime
-          old-locale shakespeare text time transformers unordered-containers
-          yesod yesod-core yesod-form
+          network-uri old-locale shakespeare text time transformers
+          unordered-containers yesod yesod-core yesod-form
         ];
         testHaskellDepends = [
-          aeson base containers hspec mime old-locale text yesod yesod-form
-          yesod-test
+          aeson base containers hspec mime network-uri old-locale text yesod
+          yesod-form yesod-test
         ];
         description = "Transloadit support for Yesod";
         license = stdenv.lib.licenses.mit;
