@@ -11,7 +11,7 @@ let
       }:
       mkDerivation {
         pname = "yesod-transloadit";
-        version = "0.4.3.0";
+        version = "0.5.0.0";
         src = ./.;
         libraryHaskellDepends = [
           aeson base byteable bytestring cryptohash lens lens-aeson mime
