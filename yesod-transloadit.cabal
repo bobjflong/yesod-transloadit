@@ -46,16 +46,16 @@ test-suite tests
   main-is:             Tests.hs
   hs-source-dirs:      test
 
-  build-depends:       base,
-                       yesod-transloadit,
-                       yesod-test,
-                       hspec,
-                       yesod,
-                       yesod-form,
-                       old-locale,
-                       text,
-                       aeson,
-                       containers,
-                       mime
+  build-depends:       base
+                       , yesod-transloadit
+                       , yesod-test
+                       , hspec
+                       , yesod
+                       , yesod-form
+                       , old-locale
+                       , text
+                       , aeson
+                       , containers
+                       , mime
 
   default-language:    Haskell2010
