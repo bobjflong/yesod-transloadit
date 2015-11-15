@@ -64,7 +64,7 @@ sampleDict = fromList [("results", results)]
              where results = fromList [("foo", stepResults)]
                    stepResults = [fromList [("id","<id>"), ("name", "n"), ("basename", "b"), ("ext", "e"), ("mime", "text/plain"), ("field", "f"), ("url", "http://foo.com"), ("ssl_url", "https://foo.com")]]
 
-sampleResult = fromJust $ nthStepResult 0 "foo" (return $ encode sampleDict)
+sampleResult = fromJust $ nthStepResult (return $ encode sampleDict) "foo" 0
 
 formGenSpecs :: Spec
 formGenSpecs = yesodSpec Test $ do

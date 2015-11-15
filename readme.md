@@ -69,7 +69,7 @@ postHomeR :: Handler Html
 postHomeR = defaultLayout $ do
   results <- handleTransloadit
   -- my_template contains a step called "cropped_thumb"
-  case nthStepResult 0 "cropped_thumb" results of
+  case nthStepResult results "cropped_thumb" 0 of
     Just s -> let imageSrc = s ^. sslUrl in
                 [whamlet|
                   $case imageSrc

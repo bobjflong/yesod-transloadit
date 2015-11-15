@@ -185,9 +185,9 @@ parseResult hm = StepResult <$> v "id"
         toURI = parseURI . unpack
 
 -- | Helper method to pull the nth @StepResult@ for a given key from the Transloadit response
-nthStepResult :: AsValue s => Int -> Text -> Maybe s -> Maybe StepResult
-nthStepResult _ _ Nothing = Nothing
-nthStepResult i k (Just u) = u ^? AL.key "results"
+nthStepResult :: AsValue s => Maybe s -> Text -> Int -> Maybe StepResult
+nthStepResult Nothing _ _ = Nothing
+nthStepResult (Just u) k i = u ^? AL.key "results"
                              . AL.key k
                              . nth i
                              . _Object
