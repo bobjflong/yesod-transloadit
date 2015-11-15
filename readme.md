@@ -67,13 +67,18 @@ The handler for our form is quite simple, we try to parse the results (using the
 ```haskell
 postHomeR :: Handler Html
 postHomeR = defaultLayout $ do
-  results <- handleTransloadit -- "results" is just JSON, we can use nthStepResult to optionally parse it
-
+  results <- handleTransloadit
   -- my_template contains a step called "cropped_thumb"
   case nthStepResult 0 "cropped_thumb" results of
-    Just s -> [whamlet| <img src="#{s ^. sslUrl}"/> |]
+    Just s -> let imageSrc = s ^. sslUrl in
+                [whamlet|
+                  $case imageSrc
+                    $of Just url
+                      <img src="#{show url}"/>
+                    $of _
+                      <p>invalid URL after upload
+                |]
     _ -> [whamlet| No results :( |]
-
   return ()
 ```
 

@@ -51,6 +51,7 @@ import           Data.Monoid
 import           Data.Text
 import           Data.Text.Encoding
 import           Data.Time
+import           Network.URI
 import           Text.Julius
 import           Yesod                         hiding (Key)
 import           Yesod.Form.Jquery             (YesodJquery (..))
@@ -89,8 +90,8 @@ data StepResult = StepResult {
   _extension :: Text,
   _mime      :: Maybe Type,
   _field     :: Text,
-  _url       :: Text,
-  _sslUrl    :: Text
+  _url       :: Maybe URI,
+  _sslUrl    :: Maybe URI
 } deriving (Show)
 
 $(makeLenses ''StepResult)
@@ -176,11 +177,12 @@ parseResult hm = StepResult <$> v "id"
                  <*> v "ext"
                  <*> (parseMIMEType <$> v "mime")
                  <*> v "field"
-                 <*> v "url"
-                 <*> v "ssl_url"
+                 <*> (toURI <$> v "url")
+                 <*> (toURI <$> v "ssl_url")
   where v s = case HM.lookup s hm of
           (Just (String t)) -> Just t
           _ -> Nothing
+        toURI = parseURI . unpack
 
 -- | Helper method to pull the nth @StepResult@ for a given key from the Transloadit response
 nthStepResult :: AsValue s => Int -> Text -> Maybe s -> Maybe StepResult
