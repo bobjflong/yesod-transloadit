@@ -55,6 +55,7 @@ import           Network.URI
 import           Text.Julius
 import           Yesod                         hiding (Key)
 import           Yesod.Form.Jquery             (YesodJquery (..))
+import           Yesod.Transloadit.Internal
 import           Yesod.Transloadit.OrderedJSON hiding (encode)
 import qualified Yesod.Transloadit.OrderedJSON as OJ
 #if MIN_VERSION_time(1,5,0)
@@ -165,7 +166,7 @@ handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
                                           <*> ireq hiddenField "_token"
   t <- tokenText
-  return $ if token d == t then return (raw d) else Nothing
+  return $ if csrfMatches (token d) t then pure (raw d) else Nothing
 
 _stepResult :: Getter Object (Maybe StepResult)
 _stepResult = to parseResult

@@ -14,10 +14,11 @@ import           Data.Text
 import           Network.URI
 import           System.Locale
 import           Test.Hspec
-import           Yesod             hiding (Key, get)
-import           Yesod.Form.Jquery (YesodJquery (..))
+import           Yesod                      hiding (Key, get)
+import           Yesod.Form.Jquery          (YesodJquery (..))
 import           Yesod.Test
 import           Yesod.Transloadit
+import           Yesod.Transloadit.Internal
 
 data Test = Test
 mkYesod "Test" [parseRoutes| / HomeR GET |]
@@ -90,5 +91,9 @@ formGenSpecs = yesodSpec Test $ do
     yit "grabs mime" $ assertEqual "mime" (sampleResult ^. mime) (parseMIMEType "text/plain")
     yit "grabs field" $ assertEqual "field" (sampleResult ^. field) ("f" :: Text)
     yit "grabs url" $ assertEqual "url" (sampleResult ^. url) (parseURI "http://foo.com")
+  ydescribe "csrf checking" $ do
+    yit "fails with empties" $ assertEqual "empty csrf" False (csrfMatches "" "")
+    yit "fails with mismatches" $ assertEqual "bad csrf" False (csrfMatches "foo" "bar")
+    yit "succeeds" $ assertEqual "correct csrf" True (csrfMatches "foo" "foo")
 
 main = hspec formGenSpecs

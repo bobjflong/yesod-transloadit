@@ -16,7 +16,7 @@ source-repository head
   location: https://github.com/bobjflong/yesod-transloadit.git
 
 library
-  exposed-modules:     Yesod.Transloadit
+  exposed-modules:     Yesod.Transloadit, Yesod.Transloadit.Internal
   ghc-options:         -Wall
   other-modules:       Yesod.Transloadit.OrderedJSON
   build-depends:       base < 5
