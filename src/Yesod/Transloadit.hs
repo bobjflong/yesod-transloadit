@@ -166,7 +166,7 @@ handleTransloadit = do
   d <- runInputPost $ TransloaditResponse <$> ireq hiddenField "transloadit"
                                           <*> ireq hiddenField "_token"
   t <- tokenText
-  return $ if csrfMatches (token d) t then pure (raw d) else Nothing
+  return $ if csrfMatches (token d) t then pure (raw d) else mempty
 
 _stepResult :: Getter Object (Maybe StepResult)
 _stepResult = to parseResult
